@@ -1,0 +1,23 @@
+{
+  "name": "progressive-digital/webform_alter",
+  "type": "drupal-module",
+  "description": "Webform alterations.",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/progressive-digital/webform_alter",
+  "minimum-stability": "dev",
+  "support": {
+      "issues": "https://github.com/progressive-digital/webform_alter/issues",
+      "source": "https://github.com/progressive-digital/webform_alter"
+  },
+  "authors": [
+    {
+      "name": "Guido Schmitz",
+      "homepage": "https://progressivedigital.de",
+      "role": "Developer"
+    }
+  ],
+  "require": {},
+  "require-dev": {
+    "drupal/webform": "^6.1"
+  }
+}
