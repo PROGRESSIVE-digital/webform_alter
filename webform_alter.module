@@ -1,0 +1,101 @@
+<?php
+
+/**
+ * @file
+ * Contains webform_alter.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Component\Serialization\Json;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_help().
+ */
+function webform_alter_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the webform_alter module.
+    case 'help.page.webform_alter':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Alters webforms to be better integrated in the theme') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_webform_element_alter().
+ */
+function webform_alter_webform_element_alter(array &$element, FormStateInterface $form_state, array $context) {
+  if ($element['#type'] === 'select') {
+    if (!isset($element['#required'])) {
+      $element['#required'] = FALSE;
+    }
+    $required = isset($element['#states']['required']) ? TRUE : $element['#required'];
+    if (!isset($element['#multiple'])) {
+      $element['#multiple'] = FALSE;
+    }
+
+    $multiple = $element['#multiple'];
+    if ($multiple && isset($element['#name'])) {
+      $element['#attributes']['multiple'] = 'multiple';
+      $element['#attributes']['name'] = $element['#name'] . '[]';
+    }
+    if (!isset($element['#cardinality'])) {
+      $element['#cardinality'] = 0;
+    }
+
+    $current_language = \Drupal::languageManager()->getCurrentLanguage();
+    $current_theme = \Drupal::theme()->getActiveTheme()->getName();
+    $select2_theme_exists = \Drupal::service('library.discovery')->getLibraryByName($current_theme, 'select2.theme');
+
+    // Placeholder should be taken from #placeholder property if it set.
+    // Otherwise we can take it from '#empty_option' property.
+    $placeholder_text = $required ? new TranslatableMarkup('- Select -') : new TranslatableMarkup('- None -');
+    $placeholder = ['id' => '', 'text' => $placeholder_text];
+    if (!empty($element['#empty_value'])) {
+      $placeholder['id'] = $element['#empty_value'];
+    }
+    if (!empty($element['#placeholder'])) {
+      $placeholder['text'] = $element['#placeholder'];
+    }
+    elseif (!empty($element['#empty_option'])) {
+      $placeholder['text'] = $element['#empty_option'];
+    }
+    if (!isset($element['#autocomplete'])) {
+      $element['#autocomplete'] = FALSE;
+    }
+    if (!isset($element['#autocreate'])) {
+      $element['#autocreate'] = FALSE;
+    }
+
+    // Defining the select2 configuration.
+    $settings = [
+      'multiple' => $multiple,
+      'placeholder' => $placeholder,
+      // @todo Enable allowClear for multiple fields. https://github.com/select2/select2/issues/3335.
+      'allowClear' => !$multiple && !$required,
+      'dir' => $current_language->getDirection(),
+      'language' => $current_language->getId(),
+      'tags' => (bool) $element['#autocreate'],
+      'theme' => $select2_theme_exists ? $current_theme : 'default',
+      'maximumSelectionLength' => $multiple ? $element['#cardinality'] : 0,
+      'tokenSeparators' => $element['#autocreate'] ? [','] : [],
+      'selectOnClose' => $element['#autocomplete'],
+      'width' => '100%',
+    ];
+
+    $element['#attributes']['class'][] = 'select2-widget';
+    $element['#attributes']['data-select2-config'] = Json::encode($settings);
+
+    // Adding the select2 library.
+    $element['#attached']['library'][] = 'select2/select2';
+    $element['#attached']['library'][] = 'select2/select2.i18n.' . $current_language->getId();
+    if ($select2_theme_exists) {
+      $element['#attached']['library'][] = $current_theme . '/select2.theme';
+    }
+  }
+}
