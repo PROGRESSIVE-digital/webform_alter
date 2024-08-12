@@ -30,7 +30,7 @@ function webform_alter_help($route_name, RouteMatchInterface $route_match) {
  * Implements hook_webform_element_alter().
  */
 function webform_alter_webform_element_alter(array &$element, FormStateInterface $form_state, array $context) {
-  if ($element['#type'] === 'select') {
+  if (isset($element['#type']) && $element['#type'] === 'select') {
     if (!isset($element['#required'])) {
       $element['#required'] = FALSE;
     }
