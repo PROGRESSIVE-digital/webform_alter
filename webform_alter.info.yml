@@ -1,7 +1,7 @@
 name: 'Webform Alter'
 type: module
 description: 'Alters webforms to be better integrated in the theme'
-core_version_requirement: ^9.2 || ^10
+core_version_requirement: ^9.2 || ^10 || ^11
 package: 'Webform'
 dependencies:
   - drupal:webform
